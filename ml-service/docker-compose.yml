@@ -1,0 +1,61 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: triageflow
+      POSTGRES_PASSWORD: triageflow
+      POSTGRES_DB: triageflow
+    ports:
+      - "5432:5432"
+    volumes:
+      - triageflow_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U triageflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  ml-service:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+psycopg2://triageflow:triageflow@db:5432/triageflow
+      ML_SERVICE_ENV: docker
+      LOG_LEVEL: INFO
+      RETRAIN_MIN_APPROVED_CORRECTIONS: "50"
+      RETRAIN_WEEKLY_ENABLED: "true"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      # Persist trained model artifacts and feedback dataset snapshots
+      # across container restarts/rebuilds.
+      - ./models:/srv/app/models
+      - ./data/feedback_exports:/srv/app/data/feedback_exports
+
+  # -------------------------------------------------------------------
+  # Example of how the existing FastAPI/PostgreSQL backend would sit
+  # alongside this service, sharing the same Postgres instance (or point
+  # `DATABASE_URL` at its own dedicated database/schema instead). Uncomment
+  # and adjust `build.context` to your backend repo to run both together.
+  # -------------------------------------------------------------------
+  # backend:
+  #   build: ../triageflow-backend
+  #   ports:
+  #     - "8080:8080"
+  #   environment:
+  #     DATABASE_URL: postgresql+psycopg2://triageflow:triageflow@db:5432/triageflow
+  #     ML_SERVICE_URL: http://ml-service:8000
+  #   depends_on:
+  #     db:
+  #       condition: service_healthy
+  #     ml-service:
+  #       condition: service_started
+
+volumes:
+  triageflow_pg_data:

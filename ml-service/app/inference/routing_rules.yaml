@@ -1,0 +1,44 @@
+# Configurable routing rules for TriageFlow.
+#
+# Resolution order:
+#   1. Exact "category:urgency" match
+#   2. Category-level default (urgency = "*")
+#   3. Global default team
+#
+# Edit this file (or point ROUTING_RULES_PATH elsewhere) to change routing
+# without touching code or redeploying a model.
+
+default_team: general_support
+
+rules:
+  - category: billing
+    urgency: critical
+    team: billing_escalations
+  - category: billing
+    urgency: "*"
+    team: billing_support
+
+  - category: technical
+    urgency: critical
+    team: incident_response
+  - category: technical
+    urgency: high
+    team: technical_support_tier2
+  - category: technical
+    urgency: "*"
+    team: technical_support_tier1
+
+  - category: account
+    urgency: critical
+    team: account_security
+  - category: account
+    urgency: "*"
+    team: account_support
+
+  - category: feature_request
+    urgency: "*"
+    team: product_team
+
+  - category: general
+    urgency: "*"
+    team: general_support
