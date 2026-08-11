@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.db
+models/*/
+!models/.gitkeep
+data/feedback_exports/*/
+!data/feedback_exports/.gitkeep
+.env
+.pytest_cache/
+.coverage
+htmlcov/

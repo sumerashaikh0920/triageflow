@@ -1,0 +1,31 @@
+ticket_id,subject,body,category,subcategory,urgency,sentiment,created_at
+T1001,Refund not received,"I cancelled my subscription two weeks ago and was promised a refund, but I still have not received the money in my account. This is unacceptable.",billing,billing_refund,high,negative,2025-11-02
+T1002,Question about my last invoice,"Hi, could someone explain the extra line item on my October invoice? I don't recognize the charge.",billing,billing_invoice,low,neutral,2025-11-03
+T1003,Downgrade my subscription plan,"I would like to move from the Pro plan to the Basic plan starting next billing cycle please.",billing,billing_subscription,low,neutral,2025-11-04
+T1004,URGENT billing error charged twice,"You charged my card twice this month for the same subscription! Please fix this immediately, I need this resolved today.",billing,billing_invoice,critical,negative,2025-11-05
+T1005,App crashes every time I open reports,"Every time I click on the Reports tab the app crashes completely and I lose my session. This has been happening since the update.",technical,technical_bug,high,negative,2025-11-06
+T1006,Entire platform is down for our team,"None of our 40 employees can log in right now, the dashboard just times out. Production is completely down.",technical,technical_outage,critical,negative,2025-11-06
+T1007,API integration returning 500 errors,"Our integration with your webhook API started returning 500 errors after your last deploy. Sample request attached.",technical,technical_integration,high,negative,2025-11-07
+T1008,Minor UI glitch on settings page,"Small cosmetic issue: the save button overlaps the label text on the settings page in dark mode. Not urgent.",technical,technical_bug,low,neutral,2025-11-08
+T1009,Can't reset my password,"The password reset link in the email is broken, it just redirects to the homepage. I've been locked out for two days.",account,account_login,high,negative,2025-11-09
+T1010,Need admin permissions removed for a former employee,"Please remove admin access for a team member who left the company yesterday, this is a security concern.",account,account_permissions,high,neutral,2025-11-10
+T1011,Please delete my account and all data,"I no longer wish to use the product. Please permanently delete my account and all associated data per GDPR.",account,account_deletion,medium,neutral,2025-11-11
+T1012,Two factor authentication not sending codes,"I'm not receiving SMS codes for 2FA login, tried three times, can't get into my account at all right now.",account,account_login,critical,negative,2025-11-11
+T1013,Would love a dark mode option,"It would be great if the dashboard supported a dark theme, it's tough on the eyes at night.",feature_request,feature_request_new,low,positive,2025-11-12
+T1014,Add CSV export to the analytics page,"Can you add a CSV export button to analytics? We currently have to screenshot everything which is painful.",feature_request,feature_request_enhancement,medium,neutral,2025-11-13
+T1015,Suggestion improve search filters,"Search filters could be more granular, maybe add a date range picker. Just a suggestion, loving the product otherwise!",feature_request,feature_request_enhancement,low,positive,2025-11-14
+T1016,Feature idea Slack notifications,"Would be awesome to get Slack notifications when a ticket is assigned to me instead of only email.",feature_request,feature_request_new,low,positive,2025-11-15
+T1017,How do I invite teammates,"New to the product, trying to figure out how to invite my teammates to the workspace. Can you point me to docs?",general,general_question,low,neutral,2025-11-16
+T1018,Great support experience recently,"Just wanted to say your support team resolved my last two tickets super fast, really appreciate it!",general,general_feedback,low,positive,2025-11-17
+T1019,What are your business hours,"Quick question, what time zone and hours is your support team available? Want to know when to expect replies.",general,general_question,low,neutral,2025-11-18
+T1020,Overall very happy with the product,"Been using this for six months now and it has genuinely improved how our team handles tickets. Thank you!",general,general_feedback,low,positive,2025-11-19
+T1021,Charged after cancelling account,"I cancelled last month yet was billed again today. Please refund this immediately, very frustrated.",billing,billing_refund,critical,negative,2025-11-20
+T1022,Subscription upgrade question,"If I upgrade to Enterprise mid cycle, do I get prorated billing or charged the full amount?",billing,billing_subscription,low,neutral,2025-11-21
+T1023,Mobile app freezes on login screen,"The iOS app freezes on the login screen after the latest App Store update, tried reinstalling with no luck.",technical,technical_bug,medium,negative,2025-11-22
+T1024,Database connection errors in integration,"Our nightly sync job has started throwing database connection errors intermittently over the past three nights.",technical,technical_integration,medium,negative,2025-11-23
+T1025,Cannot access account after email change,"I updated my email address and now I cannot log in with either the old or new email. Locked out.",account,account_login,high,negative,2025-11-24
+T1026,Request to export all account data,"Could you send me an export of all my account data before I consider closing the account?",account,account_deletion,low,neutral,2025-11-25
+T1027,Please add bulk ticket assignment,"It would save us hours each week if we could bulk-assign tickets to agents instead of one at a time.",feature_request,feature_request_enhancement,medium,neutral,2025-11-26
+T1028,Is there a public roadmap,"Curious if there's a public roadmap so we can see what features are coming next quarter.",general,general_question,low,neutral,2025-11-27
+T1029,Outage affecting checkout for customers,"Our customers cannot complete checkout through your payment widget right now, this is costing us revenue every minute.",technical,technical_outage,critical,negative,2025-11-28
+T1030,Thank you for the quick fix,"The bug I reported last week was fixed super quickly, appreciate the fast turnaround from the engineering team.",general,general_feedback,low,positive,2025-11-29
