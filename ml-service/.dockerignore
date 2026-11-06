@@ -1,0 +1,12 @@
+__pycache__
+*.pyc
+.pytest_cache
+.env
+*.db
+.git
+.gitignore
+# Model artifacts and feedback exports live in volumes, not in the image.
+models/*
+!models/.gitkeep
+data/feedback_exports/*
+!data/feedback_exports/.gitkeep
