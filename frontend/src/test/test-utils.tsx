@@ -1,11 +1,11 @@
 import { ReactElement, ReactNode } from 'react'
 import { render, RenderOptions } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { AuthProvider } from '@/context/AuthContext'
-import { ThemeProvider } from '@/context/ThemeContext'
-import { ToastProvider } from '@/context/ToastContext'
-import { TicketsProvider } from '@/context/TicketsContext'
-import { NotificationsProvider } from '@/context/NotificationsContext'
+import { AuthProvider } from '@/context/AuthProvider'
+import { ThemeProvider } from '@/context/ThemeProvider'
+import { ToastProvider } from '@/context/ToastProvider'
+import { TicketsProvider } from '@/context/TicketsProvider'
+import { NotificationsProvider } from '@/context/NotificationsProvider'
 
 function makeAllProviders(initialEntries: string[]) {
   return function AllProviders({ children }: { children: ReactNode }) {
@@ -32,5 +32,3 @@ export function renderWithProviders(
   const { initialEntries = ['/'], ...renderOptions } = options ?? {}
   return render(ui, { wrapper: makeAllProviders(initialEntries), ...renderOptions })
 }
-
-export * from '@testing-library/react'

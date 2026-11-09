@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
-import { AuthProvider, useAuth } from '@/context/AuthContext'
+import { useAuth } from '@/context/AuthContext'
+import { AuthProvider } from '@/context/AuthProvider'
 
 describe('AuthContext', () => {
   it('starts logged out', () => {

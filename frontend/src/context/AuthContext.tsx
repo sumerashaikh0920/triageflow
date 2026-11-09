@@ -1,59 +1,10 @@
-import { createContext, useContext, useState, ReactNode } from 'react'
-import { UserRole } from '@/lib/mock-data'
+import { useContext } from 'react'
+import { AuthContext } from './auth-context'
 
-export interface AuthUser {
-  id: string
-  name: string
-  email: string
-  role: UserRole
-  avatar: string
-}
+export type { AuthUser } from './auth-context'
 
-const DEMO_USERS: Record<UserRole, AuthUser> = {
-  agent: {
-    id: 'u2',
-    name: 'James Park',
-    email: 'james@triageflow.io',
-    role: 'agent',
-    avatar: 'JP',
-  },
-  team_lead: {
-    id: 'u1',
-    name: 'Sarah Chen',
-    email: 'sarah@triageflow.io',
-    role: 'team_lead',
-    avatar: 'SC',
-  },
-  admin: {
-    id: 'u5',
-    name: 'Priya Nair',
-    email: 'priya@triageflow.io',
-    role: 'admin',
-    avatar: 'PN',
-  },
-}
-
-interface AuthContextValue {
-  user: AuthUser | null
-  login: (role: UserRole) => void
-  logout: () => void
-}
-
-const AuthContext = createContext<AuthContextValue | null>(null)
-
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null)
-
-  const login = (role: UserRole) => setUser(DEMO_USERS[role])
-  const logout = () => setUser(null)
-
-  return (
-    <AuthContext.Provider value={{ user, login, logout }}>
-      {children}
-    </AuthContext.Provider>
-  )
-}
-
+// The provider lives in AuthProvider.tsx so that component files only export components
+// (required by react-refresh/only-export-components for Fast Refresh).
 export function useAuth() {
   const ctx = useContext(AuthContext)
   if (!ctx) throw new Error('useAuth must be used within AuthProvider')

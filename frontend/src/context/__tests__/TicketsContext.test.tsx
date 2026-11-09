@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
-import { TicketsProvider, useTickets } from '@/context/TicketsContext'
+import { useTickets } from '@/context/TicketsContext'
+import { TicketsProvider } from '@/context/TicketsProvider'
 
 describe('TicketsContext', () => {
   it('corrects a ticket category and records activity + pending feedback', () => {
