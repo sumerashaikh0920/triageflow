@@ -1,0 +1,103 @@
+name: Retrain (reusable)
+
+# Shared by retrain-scheduled.yml and retrain-on-feedback.yml. Not meant to be run directly.
+#
+# With the ML_SERVICE_URL secret set: drives the deployed ML service's retraining pipeline over HTTP
+# (/retrain/check, then /retrain/run). The candidate is registered as "pending": nothing is
+# approved or activated automatically.
+# Without it: boots the stack inside the runner and runs a forced baseline retrain on the bundled
+# dataset, proving the pipeline works end to end (a dry run, nothing is deployed).
+
+on:
+  workflow_call:
+    inputs:
+      mode:
+        description: "baseline or transformer"
+        type: string
+        default: baseline
+      force:
+        description: "Retrain even if no trigger fired"
+        type: boolean
+        default: false
+      only_if_triggered:
+        description: "Stop unless /retrain/check says a trigger fired"
+        type: boolean
+        default: true
+      reason:
+        description: "What started this run (shown in the summary)"
+        type: string
+        default: manual
+    secrets:
+      ML_SERVICE_URL:
+        required: false
+      ML_SERVICE_AUTH_HEADER:
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  retrain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Decide target
+        id: target
+        env:
+          ML_SERVICE_URL: ${{ secrets.ML_SERVICE_URL }}
+        run: |
+          if [ -n "$ML_SERVICE_URL" ]; then echo "remote=true" >> "$GITHUB_OUTPUT"; else echo "remote=false" >> "$GITHUB_OUTPUT"; fi
+
+      - name: Retrain on the deployed ML service
+        if: steps.target.outputs.remote == 'true'
+        env:
+          ML_SERVICE_URL: ${{ secrets.ML_SERVICE_URL }}
+          ML_SERVICE_AUTH_HEADER: ${{ secrets.ML_SERVICE_AUTH_HEADER }}
+          MODE: ${{ inputs.mode }}
+          FORCE: ${{ inputs.force }}
+          ONLY_IF_TRIGGERED: ${{ inputs.only_if_triggered }}
+          REPORT_FILE: retrain-report.json
+          RUN_REASON: ${{ inputs.reason }}
+        run: |
+          echo "Started by: $RUN_REASON" >> "$GITHUB_STEP_SUMMARY"
+          ./scripts/retrain_via_api.sh
+
+      - name: Dry run - start ML service in the runner
+        if: steps.target.outputs.remote != 'true'
+        env:
+          RUN_REASON: ${{ inputs.reason }}
+        run: |
+          {
+            echo "### Dry run (no ML_SERVICE_URL secret configured)"
+            echo "Started by: $RUN_REASON. Training ran against the bundled example dataset inside this runner; nothing was deployed."
+          } >> "$GITHUB_STEP_SUMMARY"
+          cp .env.example .env
+          docker compose up -d --build --wait --wait-timeout 600 db ml-service
+
+      - name: Dry run - forced baseline retrain
+        if: steps.target.outputs.remote != 'true'
+        env:
+          ML_SERVICE_URL: http://127.0.0.1:8001
+          MODE: baseline
+          FORCE: "true"
+          ONLY_IF_TRIGGERED: "false"
+          REPORT_FILE: retrain-report.json
+        run: ./scripts/retrain_via_api.sh
+
+      - name: Dry run - logs on failure
+        if: failure() && steps.target.outputs.remote != 'true'
+        run: docker compose logs --no-color --tail=200 ml-service
+
+      - name: Dry run - tear down
+        if: always() && steps.target.outputs.remote != 'true'
+        run: docker compose down -v
+
+      - name: Upload report
+        if: always() && hashFiles('retrain-report.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: retrain-report
+          path: retrain-report.json
+          retention-days: 90

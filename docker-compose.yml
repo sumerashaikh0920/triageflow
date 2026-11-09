@@ -1,0 +1,119 @@
+# =============================================================================
+# TriageFlow - full stack (frontend + backend + PostgreSQL + ML service)
+#
+#   cp .env.example .env      # optional for local use - every value has a default
+#   docker compose up --build
+#
+#   Frontend  http://localhost:3000
+#   Backend   http://localhost:8000/docs
+#   ML svc    http://localhost:8001/docs   (bound to 127.0.0.1 only: it has no auth)
+#
+# The per-service files (backend/docker-compose.yml, ml-service/docker-compose.yml)
+# are kept only for running ONE service in isolation. This file is the primary way
+# to run the project.
+# =============================================================================
+name: triageflow
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-triageflow}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-triageflow}
+      POSTGRES_DB: ${POSTGRES_DB:-triageflow}
+      # Second database, created on first boot by deploy/postgres/init-ml-db.sh,
+      # so the ML service's tables never mix with the backend's Alembic schema.
+      ML_POSTGRES_DB: ${ML_POSTGRES_DB:-triageflow_ml}
+    ports:
+      # Localhost only, for psql / GUI clients. Remove to keep the DB fully internal.
+      - "127.0.0.1:${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./deploy/postgres/init-ml-db.sh:/docker-entrypoint-initdb.d/10-init-ml-db.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ENV: ${ENV:-development}
+      DEBUG: ${DEBUG:-false}
+      PROJECT_NAME: TriageFlow
+      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-triageflow}:${POSTGRES_PASSWORD:-triageflow}@db:5432/${POSTGRES_DB:-triageflow}
+      # LOCAL DEFAULT ONLY. Always set a long random JWT_SECRET for anything public.
+      JWT_SECRET: ${JWT_SECRET:-local-dev-only-change-me-before-deploying}
+      JWT_ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
+      REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS:-7}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:5173}
+      # entrypoint.sh runs `alembic upgrade head`, then seeds demo data when true
+      # (the seed is idempotent: it skips if users already exist).
+      SEED_ON_STARTUP: ${SEED_ON_STARTUP:-true}
+      # Not read by the backend today (its predictor is a built-in mock). Wired here
+      # so the ML client planned in backend/app/services/ml_stub.py has an address.
+      ML_SERVICE_URL: http://ml-service:8000
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    healthcheck:
+      # Passes only after entrypoint.sh finished migrations, because uvicorn starts last.
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 40s
+
+  ml-service:
+    build:
+      context: ./ml-service
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-triageflow}:${POSTGRES_PASSWORD:-triageflow}@db:5432/${ML_POSTGRES_DB:-triageflow_ml}
+      ML_SERVICE_ENV: docker
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      MODEL_REGISTRY_DIR: /srv/app/models
+      RETRAIN_MIN_APPROVED_CORRECTIONS: ${RETRAIN_MIN_APPROVED_CORRECTIONS:-50}
+      RETRAIN_WEEKLY_ENABLED: ${RETRAIN_WEEKLY_ENABLED:-true}
+      RETRAIN_REGRESSION_TOLERANCE: ${RETRAIN_REGRESSION_TOLERANCE:-0.01}
+    ports:
+      # Localhost only: /retrain, /models and /feedback have no authentication.
+      - "127.0.0.1:${ML_SERVICE_PORT:-8001}:8000"
+    volumes:
+      - ml_models:/srv/app/models
+      - ml_feedback_exports:/srv/app/data/feedback_exports
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+      # First boot imports torch and trains the bootstrap baseline model.
+      start_period: 90s
+
+  frontend:
+    build:
+      context: ./frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      # Where nginx forwards /api/* (the /api prefix is stripped).
+      BACKEND_UPSTREAM: http://backend:8000
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+
+volumes:
+  pg_data:
+  ml_models:
+  ml_feedback_exports:

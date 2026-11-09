@@ -1,0 +1,37 @@
+name: Retrain (scheduled / manual)
+
+# Weekly check. The ML service decides whether a trigger fired (active model older than the
+# weekly interval, or enough approved corrections); if not, the run ends as a no-op.
+# Note: GitHub only runs schedules from the default branch and pauses them after 60 days
+# without repository activity.
+on:
+  schedule:
+    - cron: "0 3 * * 1" # Mondays 03:00 UTC
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Trainer to run"
+        type: choice
+        options: [baseline, transformer]
+        default: baseline
+      force:
+        description: "Retrain even if no trigger fired"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: model-retraining
+  cancel-in-progress: false
+
+jobs:
+  retrain:
+    uses: ./.github/workflows/retrain-reusable.yml
+    with:
+      mode: ${{ inputs.mode || 'baseline' }}
+      force: ${{ inputs.force || false }}
+      only_if_triggered: ${{ !(inputs.force || false) }}
+      reason: ${{ github.event_name }}
+    secrets: inherit

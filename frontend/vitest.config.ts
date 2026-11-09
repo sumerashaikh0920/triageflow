@@ -1,4 +1,4 @@
-import { defineConfig, mergeConfig } from 'vite'
+import { mergeConfig } from 'vite'
 import { defineConfig as defineVitestConfig } from 'vitest/config'
 import viteConfig from './vite.config'
 

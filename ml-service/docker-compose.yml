@@ -1,5 +1,6 @@
-version: "3.9"
-
+# STANDALONE ML service + Postgres only (host ports 5432/8000).
+# For the full stack use the root docker-compose.yml:  docker compose up --build
+# Do not run this alongside the root stack: the ports collide.
 services:
   db:
     image: postgres:16-alpine
@@ -38,24 +39,7 @@ services:
       - ./models:/srv/app/models
       - ./data/feedback_exports:/srv/app/data/feedback_exports
 
-  # -------------------------------------------------------------------
-  # Example of how the existing FastAPI/PostgreSQL backend would sit
-  # alongside this service, sharing the same Postgres instance (or point
-  # `DATABASE_URL` at its own dedicated database/schema instead). Uncomment
-  # and adjust `build.context` to your backend repo to run both together.
-  # -------------------------------------------------------------------
-  # backend:
-  #   build: ../triageflow-backend
-  #   ports:
-  #     - "8080:8080"
-  #   environment:
-  #     DATABASE_URL: postgresql+psycopg2://triageflow:triageflow@db:5432/triageflow
-  #     ML_SERVICE_URL: http://ml-service:8000
-  #   depends_on:
-  #     db:
-  #       condition: service_healthy
-  #     ml-service:
-  #       condition: service_started
+  # The backend is wired to this service in the root docker-compose.yml.
 
 volumes:
   triageflow_pg_data:

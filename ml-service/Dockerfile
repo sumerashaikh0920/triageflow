@@ -14,7 +14,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
-RUN pip install -r requirements.txt
+# CPU-only torch first: the default PyPI wheel bundles multi-GB CUDA libraries this service
+# never uses. requirements.txt pins torch==2.4.1, which the +cpu build satisfies.
+RUN pip install torch==2.4.1 --index-url https://download.pytorch.org/whl/cpu \
+ && pip install -r requirements.txt
 
 COPY app ./app
 COPY data ./data

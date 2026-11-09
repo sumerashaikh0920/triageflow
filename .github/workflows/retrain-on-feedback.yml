@@ -1,0 +1,36 @@
+name: Retrain (approved feedback)
+
+# Event-driven: runs when something sends a `feedback-approved` repository_dispatch event
+# (see scripts/notify_feedback_approved.sh), typically after reviewers approve a batch of
+# corrections. The ML service still applies its own rule: it only retrains when the number of
+# approved, not-yet-exported corrections reaches RETRAIN_MIN_APPROVED_CORRECTIONS (or the weekly
+# trigger is due), so a noisy sender cannot cause needless training.
+#
+# Payload (all optional):  {"approved_count": 12, "mode": "baseline"}
+on:
+  repository_dispatch:
+    types: [feedback-approved]
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Trainer to run"
+        type: choice
+        options: [baseline, transformer]
+        default: baseline
+
+permissions:
+  contents: read
+
+concurrency:
+  group: model-retraining
+  cancel-in-progress: false
+
+jobs:
+  retrain:
+    uses: ./.github/workflows/retrain-reusable.yml
+    with:
+      mode: ${{ github.event.client_payload.mode || inputs.mode || 'baseline' }}
+      force: false
+      only_if_triggered: true
+      reason: "feedback-approved event (${{ github.event.client_payload.approved_count || 'n/a' }} approved)"
+    secrets: inherit
